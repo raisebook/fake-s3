@@ -7,10 +7,10 @@
 
 After cloning, create the gem-file and install it:
 ```bash
-% git clone https://github.com/eikevons/fake-s3.git
-% cd fakes3
-% gem build fakes3.gemspec
-% gem install fakes3-0.2.1.pre.eike.gem
+git clone https://github.com/eikevons/fake-s3.git
+cd fakes3
+gem build fakes3.gemspec
+gem install fakes3-0.2.1.pre.eike.gem
 ```
 
 ## Introduction
