@@ -311,6 +311,11 @@ module FakeS3
         bucket_obj = @store.get_bucket(s_req.bucket)
         keys = XmlParser.delete_objects(s_req.webrick_request)
         @store.delete_objects(bucket_obj,keys,s_req.webrick_request)
+        # TODO: Create a true representation of the result. At the moment, all
+        #       requested keys are listed as 'deleted' in the response.
+        response.status = 200
+        response.body = XmlAdapter.delete_objects(keys)
+        return response
       when Request::DELETE_OBJECT
         bucket_obj = @store.get_bucket(s_req.bucket)
         @store.delete_object(bucket_obj,s_req.object,s_req.webrick_request)
