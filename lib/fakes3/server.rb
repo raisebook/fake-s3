@@ -62,7 +62,6 @@ module FakeS3
     end
 
     def do_GET(request, response)
-      x = 1/0
       s_req = normalize_request(request)
 
       case s_req.type
@@ -232,7 +231,6 @@ module FakeS3
     end
 
     def do_POST(request,response)
-      x = 1/0
       s_req = normalize_request(request)
       key   = request.query['key']
       query = CGI::parse(request.request_uri.query || "")
@@ -476,13 +474,13 @@ module FakeS3
       when 'GET','HEAD'
         normalize_get(webrick_req,s_req)
       when 'DELETE'
+        normalize_post(webrick_req,s_req)
+      when 'POST'
         if webrick_req.query_string != 'delete'
           normalize_post(webrick_req,s_req)
         else
           normalize_delete(webrick_req,s_req)
         end
-      when 'POST'
-        normalize_post(webrick_req,s_req)
       else
         raise "Unknown Request"
       end
