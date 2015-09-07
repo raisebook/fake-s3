@@ -479,7 +479,7 @@ module FakeS3
       when 'GET','HEAD'
         normalize_get(webrick_req,s_req)
       when 'DELETE'
-        normalize_post(webrick_req,s_req)
+        normalize_delete(webrick_req,s_req)
       when 'POST'
         if webrick_req.query_string != 'delete'
           normalize_post(webrick_req,s_req)
