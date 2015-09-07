@@ -247,7 +247,7 @@ module FakeS3
           </InitiateMultipartUploadResult>
         eos
       elsif query.has_key?('delete')
-        return do_DELETE(request, response)
+        do_DELETE(request, response)
       elsif query.has_key?('uploadId')
         upload_id  = query['uploadId'].first
         bucket_obj = @store.get_bucket(s_req.bucket)
