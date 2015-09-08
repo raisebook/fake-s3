@@ -2,6 +2,7 @@
 
 * Fix for missing objects after server restart [#69](https://github.com/jubos/fake-s3/pull/69/)
 * Fix for wrong handling of `max-keys` parameter and `isTruncated` [#85](https://github.com/jubos/fake-s3/pull/85/)
+* Add support for multiple hostnames via `-H` switch.
 
 ### Installation from source
 
@@ -10,7 +11,7 @@ After cloning, create the gem-file and install it:
 git clone https://github.com/eikevons/fake-s3.git
 cd fakes3
 gem build fakes3.gemspec
-gem install fakes3-0.2.1.pre.eike.gem
+gem install fakes3-0.2.1.eike.gem
 ```
 
 ## Introduction
