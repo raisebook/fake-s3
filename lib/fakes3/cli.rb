@@ -28,8 +28,8 @@ module FakeS3
       end
 
       hostnames = ['s3.amazonaws.com']
-      if options[:hostname]
-        host_arg = options[:hostname]
+      if options[:hostnames]
+        host_arg = options[:hostnames]
         hostnames = []
         host_arg.split(',').each do |h|
             if h =~ /:(\d+)/

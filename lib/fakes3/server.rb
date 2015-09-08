@@ -459,7 +459,7 @@ module FakeS3
 
     # This method takes a webrick request and generates a normalized FakeS3 request
     def normalize_request(webrick_req)
-      host_header= webrick_req["Host"]
+      host_header = webrick_req["Host"]
       host = host_header.split(':')[0]
 
       s_req = Request.new
@@ -491,6 +491,8 @@ module FakeS3
       end
 
       validate_request(s_req)
+
+      s_req.inspect
 
       return s_req
     end
