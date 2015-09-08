@@ -303,7 +303,7 @@ module FakeS3
         next if ['.', '..'].include?(pathname)
         if pathname == SHUCK_METADATA_DIR
           objects << get_object(bucket_name, path[root_path.length+1..-1], nil)
-        else
+        elsif File.directory? File.join(path, pathname)
           objects += get_objects(bucket_name, File.join(path, pathname), root_path)
         end
       end

@@ -492,8 +492,6 @@ module FakeS3
 
       validate_request(s_req)
 
-      s_req.inspect
-
       return s_req
     end
 
