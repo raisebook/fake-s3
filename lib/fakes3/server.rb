@@ -46,12 +46,12 @@ module FakeS3
   end
 
   class Servlet < WEBrick::HTTPServlet::AbstractServlet
-    def initialize(server,store,hostname)
+    def initialize(server,store,hostnames)
       super(server)
       @store = store
-      @hostname = hostname
+      @hostnames = hostnames
       @port = server.config[:Port]
-      @root_hostnames = [hostname,'localhost','s3.amazonaws.com','s3.localhost']
+      @root_hostnames = hostnames + ['localhost','s3.amazonaws.com','s3.localhost']
     end
 
     def validate_request(request)
@@ -523,11 +523,11 @@ module FakeS3
 
 
   class Server
-    def initialize(address,port,store,hostname,ssl_cert_path,ssl_key_path)
+    def initialize(address,port,store,hostnames,ssl_cert_path,ssl_key_path)
       @address = address
       @port = port
       @store = store
-      @hostname = hostname
+      @hostnames = hostnames
       @ssl_cert_path = ssl_cert_path
       @ssl_key_path = ssl_key_path
       webrick_config = {
@@ -547,7 +547,7 @@ module FakeS3
     end
 
     def serve
-      @server.mount "/", Servlet, @store,@hostname
+      @server.mount "/", Servlet, @store,@hostnames
       trap "INT" do @server.shutdown end
       @server.start
     end
