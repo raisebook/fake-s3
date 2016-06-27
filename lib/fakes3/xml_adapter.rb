@@ -24,6 +24,21 @@ module FakeS3
       output
     end
 
+    def self.delete_objects(keys)
+      output = ""
+      xml = Builder::XmlMarkup.new(:target => output)
+      xml.instruct! :xml, :version=>"1.0", :encoding=>"UTF-8"
+      xml.DeleteResult(:xmlns => "http://s3.amazonaws.com/doc/2006-03-01/") { |lam|
+        keys.each do |key|
+          lam.Deleted do |o|
+            o.Key(key)
+          end
+        end
+      }
+      output
+    end
+
+
     def self.error(error)
       output = ""
       xml = Builder::XmlMarkup.new(:target => output)

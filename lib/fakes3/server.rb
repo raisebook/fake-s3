@@ -6,6 +6,7 @@ require 'securerandom'
 require 'cgi'
 require 'fakes3/file_store'
 require 'fakes3/xml_adapter'
+require 'fakes3/xml_parser'
 require 'fakes3/bucket_query'
 require 'fakes3/unsupported_operation'
 require 'fakes3/errors'
@@ -25,6 +26,7 @@ module FakeS3
     MOVE = "MOVE"
     DELETE_OBJECT = "DELETE_OBJECT"
     DELETE_BUCKET = "DELETE_BUCKET"
+    DELETE_OBJECTS = "DELETE_OBJECTS"
 
     attr_accessor :bucket,:object,:type,:src_bucket,
                   :src_object,:method,:webrick_request,
@@ -45,12 +47,12 @@ module FakeS3
   end
 
   class Servlet < WEBrick::HTTPServlet::AbstractServlet
-    def initialize(server,store,hostname)
+    def initialize(server,store,hostnames)
       super(server)
       @store = store
-      @hostname = hostname
+      @hostnames = hostnames
       @port = server.config[:Port]
-      @root_hostnames = [hostname,'localhost','s3.amazonaws.com','s3.localhost']
+      @root_hostnames = hostnames + ['localhost','s3.amazonaws.com','s3.localhost']
     end
 
     def validate_request(request)
@@ -77,7 +79,7 @@ module FakeS3
           query = {
             :marker => s_req.query["marker"] ? s_req.query["marker"].to_s : nil,
             :prefix => s_req.query["prefix"] ? s_req.query["prefix"].to_s : nil,
-            :max_keys => s_req.query["max_keys"] ? s_req.query["max_keys"].to_s : nil,
+            :max_keys => s_req.query["max-keys"] ? s_req.query["max-keys"].to_i : nil,
             :delimiter => s_req.query["delimiter"] ? s_req.query["delimiter"].to_s : nil
           }
           bq = bucket_obj.query_for_range(query)
@@ -245,6 +247,8 @@ module FakeS3
             <UploadId>#{ upload_id }</UploadId>
           </InitiateMultipartUploadResult>
         eos
+      elsif query.has_key?('delete')
+        do_DELETE(request, response)
       elsif query.has_key?('uploadId')
         upload_id  = query['uploadId'].first
         bucket_obj = @store.get_bucket(s_req.bucket)
@@ -304,6 +308,15 @@ module FakeS3
       s_req = normalize_request(request)
 
       case s_req.type
+      when Request::DELETE_OBJECTS
+        bucket_obj = @store.get_bucket(s_req.bucket)
+        keys = XmlParser.delete_objects(s_req.webrick_request)
+        @store.delete_objects(bucket_obj,keys,s_req.webrick_request)
+        # TODO: Create a true representation of the result. At the moment, all
+        #       requested keys are listed as 'deleted' in the response.
+        response.status = 200
+        response.body = XmlAdapter.delete_objects(keys)
+        return response
       when Request::DELETE_OBJECT
         bucket_obj = @store.get_bucket(s_req.bucket)
         @store.delete_object(bucket_obj,s_req.object,s_req.webrick_request)
@@ -343,8 +356,9 @@ module FakeS3
         if elems.size == 0
           raise UnsupportedOperation
         elsif elems.size == 1
-          s_req.type = Request::DELETE_BUCKET
+          s_req.type = webrick_req.query_string == 'delete' ? Request::DELETE_OBJECTS : Request::DELETE_BUCKET
           s_req.query = query
+          s_req.webrick_request = webrick_req
         else
           s_req.type = Request::DELETE_OBJECT
           object = elems[1,elems.size].join('/')
@@ -446,7 +460,7 @@ module FakeS3
 
     # This method takes a webrick request and generates a normalized FakeS3 request
     def normalize_request(webrick_req)
-      host_header= webrick_req["Host"]
+      host_header = webrick_req["Host"]
       host = host_header.split(':')[0]
 
       s_req = Request.new
@@ -468,7 +482,11 @@ module FakeS3
       when 'DELETE'
         normalize_delete(webrick_req,s_req)
       when 'POST'
-        normalize_post(webrick_req,s_req)
+        if webrick_req.query_string != 'delete'
+          normalize_post(webrick_req,s_req)
+        else
+          normalize_delete(webrick_req,s_req)
+        end
       else
         raise "Unknown Request"
       end
@@ -506,11 +524,11 @@ module FakeS3
 
 
   class Server
-    def initialize(address,port,store,hostname,ssl_cert_path,ssl_key_path)
+    def initialize(address,port,store,hostnames,ssl_cert_path,ssl_key_path)
       @address = address
       @port = port
       @store = store
-      @hostname = hostname
+      @hostnames = hostnames
       @ssl_cert_path = ssl_cert_path
       @ssl_key_path = ssl_key_path
       webrick_config = {
@@ -530,7 +548,7 @@ module FakeS3
     end
 
     def serve
-      @server.mount "/", Servlet, @store,@hostname
+      @server.mount "/", Servlet, @store,@hostnames
       trap "INT" do @server.shutdown end
       @server.start
     end

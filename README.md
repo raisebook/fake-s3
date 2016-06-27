@@ -1,3 +1,19 @@
+## Diversions from [upstream](https://github.com/jubos/fake-s3)
+
+* Fix for missing objects after server restart [#69](https://github.com/jubos/fake-s3/pull/69/)
+* Fix for wrong handling of `max-keys` parameter and `isTruncated` [#85](https://github.com/jubos/fake-s3/pull/85/)
+* Add support for multiple hostnames via `-H` switch.
+
+### Installation from source
+
+After cloning, create the gem-file and install it:
+```bash
+git clone https://github.com/eikevons/fake-s3.git
+cd fakes3
+gem build fakes3.gemspec
+gem install fakes3-0.2.1.eike.gem
+```
+
 ## Introduction
 FakeS3 is a lightweight server that responds to the same calls Amazon S3 responds to.
 It is extremely useful for testing of S3 in a sandbox environment without actually

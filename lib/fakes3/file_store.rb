@@ -21,7 +21,7 @@ module FakeS3
       @bucket_hash = {}
       Dir[File.join(root,"*")].each do |bucket|
         bucket_name = File.basename(bucket)
-        bucket_obj = Bucket.new(bucket_name,Time.now,[])
+        bucket_obj = Bucket.new(bucket_name,Time.now,get_objects(bucket_name, bucket))
         @buckets << bucket_obj
         @bucket_hash[bucket_name] = bucket_obj
       end
@@ -257,6 +257,23 @@ module FakeS3
       end
     end
 
+    def delete_objects(bucket, objects, request)
+      begin
+        filenames = []
+        objects.each do |object_name|
+          filenames << File.join(@root,bucket.name,object_name)
+          object = bucket.find(object_name)
+          bucket.remove(object)
+        end
+
+        FileUtils.rm_rf(filenames)
+      rescue
+        puts $!
+        $!.backtrace.each { |line| puts line }
+        return nil
+      end
+    end
+
     # TODO: abstract getting meta data from request.
     def create_metadata(content,request)
       metadata = {}
@@ -280,7 +297,7 @@ module FakeS3
       return metadata
     end
 
-    private
+  private
 
     # Remove chunk dividers
     def clean_chunk(chunk)
@@ -289,6 +306,23 @@ module FakeS3
       else
         chunk
       end
+    end
+
+    def get_objects(bucket_name, path, root_path=nil)
+      if root_path.nil?
+        root_path = path
+      end
+
+      objects = []
+      Dir.new(path).each do |pathname|
+        next if ['.', '..'].include?(pathname)
+        if pathname == SHUCK_METADATA_DIR
+          objects << get_object(bucket_name, path[root_path.length+1..-1], nil)
+        elsif File.directory? File.join(path, pathname)
+          objects += get_objects(bucket_name, File.join(path, pathname), root_path)
+        end
+      end
+      return objects
     end
   end
 end
