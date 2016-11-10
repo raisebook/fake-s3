@@ -12,7 +12,7 @@ WORKDIR /fakes3
 COPY . /fakes3/
 
 RUN gem build fakes3.gemspec
-RUN gem install fakes3
+RUN gem install ./fakes3-0.2.4.gem
 
 # run fake-s3
 RUN mkdir -p /fakes3_root
