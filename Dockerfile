@@ -4,10 +4,11 @@ MAINTAINER Raisebook <engineering@raisebook.com>
 ENV DEBIAN_FRONTEND noninteractive
 
 # install Ruby
-RUN apt-get update && apt-get install -yqq ruby rubygems-integration
+RUN apt-get update && apt-get install -yqq ruby rubygems-integration build-essential
 
 # install fake-s3
-RUN gem install fakes3 -v 0.2.4
+RUN gem build fakes3.gemspec
+RUN gem install fakes3
 
 # run fake-s3
 RUN mkdir -p /fakes3_root
